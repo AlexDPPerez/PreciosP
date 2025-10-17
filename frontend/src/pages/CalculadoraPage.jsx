@@ -11,7 +11,7 @@ function CalculadoraPage() {
   // Estados para los parámetros de cálculo
   const [costoProduccionFijo, setCostoProduccionFijo] = useState("");
   const [costoEmpaquePorPaquete, setCostoEmpaquePorPaquete] = useState("");
-  const [margenGanancia, setMargenGanancia] = useState("");
+  const [margenGanancia, setMargenGanancia] = useState(30);
 
   // Estados para la UI
   const [isLoading, setIsLoading] = useState(true);
@@ -142,7 +142,7 @@ function CalculadoraPage() {
                 label="Margen de Ganancia Deseado (%)"
                 type="number"
                 step="any"
-                value={margenGanancia}
+                value={margenGanancia || 30}
                 onChange={(e) => setMargenGanancia(e.target.value)}
                 placeholder="Ej: 30 para 30%"
               />

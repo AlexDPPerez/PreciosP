@@ -359,7 +359,6 @@ function IngredientesPage() {
                   type="number"
                   name="costo_paquete"
                   step="any"
-                  value={calculadora.costo_paquete}
                   onChange={handleChange}
                   placeholder="$"
                 />
@@ -368,7 +367,6 @@ function IngredientesPage() {
                   type="number"
                   name="cantidad_paquete"
                   step="any"
-                  value={calculadora.cantidad_paquete}
                   onChange={handleChange}
                   placeholder="Ej: 1.5"
                 />
