@@ -6,6 +6,8 @@ import ingredientesRoutes from "./routes/IngredientesRoutes.js";
 import medidasRoutes from "./routes/medidasRoutes.js"
 import productosRoutes from "./routes/ProductosRoutes.js"
 
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -14,6 +16,12 @@ app.use(express.json());
 // middleware para parsear los datos de formularios
 app.use(express.urlencoded({ extended: true }));
 
+// Servir archivos estáticos de React
+app.use(express.static(path.join(__dirname, "dist")));
+
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "dist", "index.html"));
+  });
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "../vistas"));
