@@ -32,15 +32,15 @@ export class Productos {
     return producto;
   }
 
-  async create(nombre, costo_lote, costo_unidad, ingredientes, cantidad_lote, cantidad_paquete) {
+  async create(nombre, ingredientes, cantidad_lote, cantidad_paquete, tiempo_produccion) {
     try {
       // Iniciar transacción
       await this.db.exec('BEGIN TRANSACTION');
 
-      // 1. Insertar el producto en la tabla 'productos'
+      // 1. Insertar el producto en la tabla 'productos' (sin costos, se calcularán después)
       const productoResult = await this.db.run(
-        "INSERT INTO productos (nombre, costo_lote, costo_unidad, cantidad_lote,cantidad_paquete) VALUES (?, ?, ?, ?,?)",
-        [nombre, costo_lote, costo_unidad, cantidad_lote, cantidad_paquete]
+        "INSERT INTO productos (nombre, costo_lote, costo_unidad, cantidad_lote, cantidad_paquete, tiempo_produccion) VALUES (?, ?, ?, ?, ?, ?)",
+        [nombre, 0, 0, cantidad_lote, cantidad_paquete, tiempo_produccion] // Inicia costos en 0
       );
 
       const id_producto = productoResult.lastID;
@@ -57,10 +57,13 @@ export class Productos {
 
       await stmt.finalize();
 
+      // 4. Recalcular y guardar los costos correctos
+      await this.recalculateAndUpdateCosts(id_producto);
+
       // Si todo fue bien, confirmar la transacción
       await this.db.exec('COMMIT');
 
-      return { id: id_producto, nombre, costo_lote, costo_unidad, cantidad_lote, cantidad_paquete };
+      return await this.getById(id_producto); // Devolver el producto completo con costos calculados
     } catch (error) {
       // Si algo falla, revertir todos los cambios
       await this.db.exec('ROLLBACK');
@@ -68,14 +71,14 @@ export class Productos {
     }
   }
 
-  async update(id, nombre, costo_lote, costo_unidad, ingredientes, cantidad_lote, cantidad_paquete) {
+  async update(id, nombre, ingredientes, cantidad_lote, cantidad_paquete, tiempo_produccion) {
     try {
       await this.db.exec('BEGIN TRANSACTION');
 
       // 1. Actualizar el producto
       await this.db.run(
-        'UPDATE productos SET nombre = ?, costo_lote = ?, costo_unidad = ?, cantidad_lote = ?, cantidad_paquete = ? WHERE id = ?',
-        [nombre, costo_lote, costo_unidad, cantidad_lote, cantidad_paquete, id]
+        'UPDATE productos SET nombre = ?, costo_lote = ?, costo_unidad = ?, cantidad_lote = ?, cantidad_paquete = ?, tiempo_produccion = ? WHERE id = ?',
+        [nombre, 0, 0, cantidad_lote, cantidad_paquete, tiempo_produccion, id] // Resetea costos antes de recalcular
       );
 
       // 2. Eliminar los ingredientes antiguos de este producto
@@ -90,8 +93,11 @@ export class Productos {
       }
       await stmt.finalize();
 
+      // 4. Recalcular y guardar los costos correctos
+      await this.recalculateAndUpdateCosts(id);
+
       await this.db.exec('COMMIT');
-      return { id, nombre, costo_lote, costo_unidad, cantidad_lote, cantidad_paquete };
+      return await this.getById(id); // Devolver el producto completo con costos calculados
     } catch (error) {
       await this.db.exec('ROLLBACK');
       throw error;

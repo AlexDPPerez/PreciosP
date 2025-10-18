@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Input from "./form/Input";
 import Button from "./form/Button";
+import {
+  PlusIcon,
+  TrashIcon,
+  XMarkIcon,
+  CheckIcon,
+} from "@heroicons/react/24/solid";
 
 function ProductosForm({ onClose, onProductAdded, productToEdit }) {
   const [ingrediente, setIngrediente] = useState({
@@ -12,6 +18,7 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
     nombre: "",
     cantidad_lote: "",
     cantidad_paquete: "",
+    tiempo_produccion: "", // Nuevo campo
   });
   const [ingredientes, setIngredientes] = useState([]);
   const [ingredientesData, setIngredientesData] = useState([]);
@@ -37,11 +44,12 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
         nombre: productToEdit.nombre,
         cantidad_lote: productToEdit.cantidad_lote,
         cantidad_paquete: productToEdit.cantidad_paquete || "",
+        tiempo_produccion: productToEdit.tiempo_produccion || "",
       });
       setIngredientes(productToEdit.ingredientes || []);
     } else {
       // Limpiar el formulario si no hay producto para editar (modo creación)
-      setProductoInfo({ nombre: "", cantidad_lote: "" });
+      setProductoInfo({ nombre: "", cantidad_lote: "", cantidad_paquete: "", tiempo_produccion: "" });
       setIngredientes([]);
     }
   }, [productToEdit]);
@@ -176,6 +184,8 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
       costo_lote: costoLote,
       costo_unidad: costoUnidad,
       costo_paquete: costoPaquete,
+      cantidad_paquete: parseFloat(productoInfo.cantidad_paquete) || 0,
+      tiempo_produccion: parseFloat(productoInfo.tiempo_produccion) || 0,
       ingredientes: ingredientes.map(({ id, cantidad }) => ({
         id,
         cantidad: parseFloat(cantidad) || 0, // Convertimos a número aquí también
@@ -209,9 +219,9 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
 
   return (
     // 1. Usamos flexbox para la estructura principal y le damos una altura fija para que ocupe todo el modal.
-    <form className="h-full flex flex-col" onSubmit={handleSubmit}>
+    <form className="flex flex-col" onSubmit={handleSubmit}>
       {/* 2. Contenedor principal que se expandirá y contendrá las dos columnas */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 p-1 min-h-0">
+      <div className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-6 p-1 min-h-0">
         {/* Columna Izquierda: Datos del Producto */}
         <div className="flex flex-col space-y-4 p-2">
           <div className="w-full">
@@ -246,28 +256,32 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
             />
           </div>
 
+          <div className="w-full">
+            <Input
+              label={"Tiempo de Producción por Lote (horas)"}
+              name={"tiempo_produccion"}
+              type="number"
+              value={productoInfo.tiempo_produccion}
+              onChange={(e) => handleChangeProducto(e)}
+            />
+          </div>
+
           {/* Aquí puedes agregar más campos si hace falta */}
           <div className="mt-auto bg-gray-100 p-4 rounded-lg space-y-3">
             <div>
-              <h3 className="text-md font-semibold text-gray-600">
-                Costo Total del Lote:
-              </h3>
+              <h3 className="text-md font-semibold text-gray-600">Costo Total del Lote:</h3>
               <p className="text-xl font-mono text-gray-800">
                 ${(costoLote || 0).toFixed(2)}
               </p>
             </div>
             <div className="border-t pt-3">
-              <h3 className="text-lg font-bold text-gray-800">
-                Costo por Unidad:
-              </h3>
+              <h3 className="text-lg font-bold text-gray-800">Costo por Unidad:</h3>
               <p className="text-3xl font-mono font-bold text-indigo-600">
                 ${(costoUnidad || 0).toFixed(3)}
               </p>
             </div>
             <div className="border-t pt-3">
-              <h3 className="text-lg font-bold text-gray-800">
-                Costo por Paquete:
-              </h3>
+              <h3 className="text-lg font-bold text-gray-800">Costo por Paquete:</h3>
               <span className="text-gray-700">
                 ({cantidadPaquetes.toFixed(0)} Paquetes)
               </span>
@@ -287,13 +301,13 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
             Ingredientes
           </label>
 
-          <div className="grid grid-cols-3 gap-3 mt-3 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 items-center">
             <select
               name="nombre_ingrediente"
               id="nombre_ingrediente"
               value={ingrediente.id}
               onChange={(e) => handleAddIngrediente(e.target.value)}
-              className="col-span-2 block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              className="sm:col-span-2 block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
             >
               <option value="">Selecciona un ingrediente</option>
               {ingredientesData
@@ -311,9 +325,10 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
             <Button
               type="button"
               onClick={addIngrediente}
-              className="w-full h-10 text-sm px-3 py-2 rounded-md"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white sm:col-span-1 w-full sm:w-auto p-2.5 flex justify-center items-center"
+              aria-label="Añadir ingrediente"
             >
-              Añadir
+              <PlusIcon className="h-5 w-5" />
             </Button>
           </div>
 
@@ -322,13 +337,13 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
             {ingredientes.map((ing, i) => (
               <div
                 key={ing.id + i}
-                className="grid grid-cols-3 gap-3 items-center p-3 border border-gray-200 rounded-lg bg-white"
+                className="grid grid-cols-2 sm:grid-cols-3 gap-3 items-center p-3 border border-gray-200 rounded-lg bg-white"
               >
-                <div className="col-span-3 text-gray-800 truncate font-medium">
+                <div className="col-span-2 sm:col-span-3 text-gray-800 truncate font-medium">
                   {ing.nombre}
                 </div>
 
-                <div className="col-span-2 flex items-center space-x-2">
+                <div className="col-span-1 sm:col-span-2 flex items-center space-x-2">
                   <input
                     type="number"
                     step="any"
@@ -345,10 +360,10 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
                 <button
                   type="button"
                   onClick={() => handleDeleteIngrediente(i)}
-                  className="col-span-1 flex justify-end text-red-500 hover:text-red-700 text-2xl font-bold leading-none"
+                  className="col-span-1 flex justify-end text-red-500 hover:text-red-700"
                   aria-label={`Eliminar ${ing.nombre}`}
                 >
-                  &times;
+                  <TrashIcon className="h-5 w-5" />
                 </button>
               </div>
             ))}
@@ -368,6 +383,7 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
           onClick={onClose}
           className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800"
         >
+          <XMarkIcon className="h-5 w-5 inline mr-1" />
           Cancelar
         </Button>
         <Button
@@ -375,11 +391,13 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
           className="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white"
           disabled={isSubmitting}
         >
-          {isSubmitting
-            ? "Guardando..."
-            : isEditing
-            ? "Guardar Cambios"
-            : "Añadir Producto"}
+          {isSubmitting ? (
+            "Guardando..."
+          ) : isEditing ? (
+            <><CheckIcon className="h-5 w-5 inline mr-2" /> Guardar Cambios</>
+          ) : (
+            <><PlusIcon className="h-5 w-5 inline mr-2" /> Añadir Producto</>
+          )}
         </Button>
       </div>
     </form>

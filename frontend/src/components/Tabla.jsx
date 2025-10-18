@@ -57,13 +57,20 @@ function Tabla({ columnas, data, isLoading, handleEdit, handleDelete, error, row
     }
 
     return currentItems.map((fila, index) => (
-      <tr
-        key={fila.id || index}
-        className="border-b border-gray-300 hover:bg-gray-200 cursor-pointer"
-      >
-        {columnas.map((col) => (
-          <td key={col.accessor} className="px-4 py-2" onClick={() => col.accessor !== 'acciones' && handleEdit(fila)}>
-            {/* Pasamos handleDelete a la celda de acciones */}
+      <tr key={fila.id || index} className="border-b border-gray-200 md:hover:bg-gray-50">
+        {columnas.map(col => (
+          <td
+            key={col.accessor}
+            className="px-4 py-3 md:py-2 block md:table-cell relative md:before:content-none before:content-[attr(data-label)] before:absolute before:left-0 before:w-1/2 before:font-bold before:text-left text-right md:text-left"
+            data-label={col.header}
+            onClick={() => {
+              // Permitir click para editar solo en modo tabla
+              if (window.innerWidth > 768 && col.accessor !== 'acciones' && handleEdit) {
+                handleEdit(fila);
+              }
+            }}
+          >
+            <span className="md:hidden" aria-hidden="true">{col.header === "" ? "" : ": "}</span>
             {col.cell
               ? col.cell(fila[col.accessor], fila, handleDelete)
               : fila[col.accessor]}
@@ -79,7 +86,7 @@ function Tabla({ columnas, data, isLoading, handleEdit, handleDelete, error, row
     }
 
     return (
-      <div className="flex justify-evenly">
+      <div className="flex flex-col sm:flex-row justify-between items-center mt-4">
         <div className="flex justify-between w-full items-center mt-4 text-sm">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
@@ -101,7 +108,7 @@ function Tabla({ columnas, data, isLoading, handleEdit, handleDelete, error, row
         </div>
 
         {/* Cantidad de elementos */}
-        <div className="flex flex-col justify-end items-center gap-1 m-2"> 
+        <div className="flex flex-col sm:flex-row items-center gap-2 mt-4 sm:mt-0">
           <label htmlFor="" className="text-xs text-gray-500 text-center">Items por pagina</label>
           <input type="number" onChange={(e) => setItemsPerPage(e.target.value)} placeholder="15" className="border border-gray-500 rounded w-10" />
         </div>
@@ -110,14 +117,14 @@ function Tabla({ columnas, data, isLoading, handleEdit, handleDelete, error, row
   };
 
   return (
-    <div className="overflow-x-auto p-4">
-      <table className="min-w-full border border-gray-200 text-sm text-left">
-        <thead className="bg-gray-200">
+    <div className="overflow-x-auto p-2 sm:p-4 bg-white rounded shadow">
+      <table className="w-full border-collapse text-sm text-left">
+        <thead className="bg-gray-100">
           <tr>
             {columnas.map((col) => (
               <th
                 key={col.accessor}
-                className="px-4 py-2 font-semibold text-gray-700 border-b border-gray-400"
+                className="px-4 py-2 font-semibold text-gray-700 border-b border-gray-200"
               >
                 {col.header}
               </th>

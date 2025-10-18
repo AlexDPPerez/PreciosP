@@ -52,8 +52,8 @@ function Modal({ isOpen, onClose, title, children, className = "" }) {
       >
         {/* Contenedor del Modal: Usamos 'relative' y evitamos que el click se propague al overlay */}
         <div
-          onClick={(e) => e.stopPropagation()}
-         className={`relative bg-white rounded-lg shadow-xl w-full p-6 transition-all duration-300 flex flex-col ${className} ${
+          onClick={(e) => e.stopPropagation()} 
+          className={`relative bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-4xl p-4 sm:p-6 transition-all duration-300 flex flex-col ${className} ${
             isRendered ? "opacity-100 scale-100" : "opacity-0 scale-95"
           }`}
           role="dialog"
@@ -72,7 +72,7 @@ function Modal({ isOpen, onClose, title, children, className = "" }) {
             </button>
           </header>
           {/* Contenido principal del modal */}
-          <main className="mt-4 flex-grow min-h-0">{children}</main>
+          <main className="mt-4 flex-grow min-h-0 overflow-y-auto">{children}</main>
         </div>
       </div>
     </>,

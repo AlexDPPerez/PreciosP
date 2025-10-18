@@ -6,6 +6,13 @@ import Input from "../components/form/Input";
 import Select from "../components/form/Select";
 import Button from "../components/form/Button";
 import ConfirmacionModal from "../components/ConfirmacionModal";
+import {
+  PlusIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  ArrowPathIcon,
+  CheckIcon,
+} from "@heroicons/react/24/solid";
 
 function IngredientesPage() {
   // lista de ingredientes y los datos del formulario
@@ -124,7 +131,9 @@ function IngredientesPage() {
           costo: parseFloat(form.costo) || 0,
         }),
       });
-
+      if (isEditing) {
+        await fetch(`/api/productos/recalculate-costs-for-ingredient/${editData.id}`, { method: 'POST' });
+      }
       if (!response.ok) {
         throw new Error(
           `Error al ${isEditing ? "actualizar" : "añadir"} el ingrediente`
@@ -277,16 +286,25 @@ function IngredientesPage() {
       accessor: "acciones",
       // La función 'cell' ahora recibe la fila completa como segundo argumento
       cell: (valor, fila) => (
-        <div className="flex space-x-2">
-         
+        <div className="flex justify-end space-x-2">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(fila);
+            }}
+            className="p-2 bg-yellow-500 hover:bg-yellow-600 text-white"
+            aria-label="Editar"
+          >
+            <PencilSquareIcon className="h-4 w-4" />
+          </Button>
           <Button
             onClick={(e) => {
               e.stopPropagation(); // ¡Esta es la clave! Detiene el burbujeo del evento.
               handleDelete(fila);
             }}
-            className="font-black text-gray-800 bg-gray-200 hover:bg-red-600 hover:text-gray-100"
+            className="p-2 bg-red-600 hover:bg-red-700 text-white"
           >
-            X
+            <TrashIcon className="h-4 w-4" />
           </Button>
         </div>
       ),
@@ -318,12 +336,11 @@ function IngredientesPage() {
         onClose={() => (
           setActiveModal(null), setTimeout(() => setEditData(null), 300)
         )}
-        title={editData ? "Editar Ingrediente" : "Añadir Ingrediente"}
-        className="max-w-md"
+        title={editData ? "Editar Ingrediente" : "Añadir Ingrediente"} 
       >
         <form
           onSubmit={handleSubmit}
-          className="max-w-md mx-auto p-6 space-y-4"
+          className="space-y-4"
         >
           <Input
             label="Nombre:"
@@ -379,13 +396,16 @@ function IngredientesPage() {
             name="costo"
             step="any"
             value={form.costo || ""} // El valor siempre viene del estado 'form' que es actualizado por el useEffect
-            onChange={handleChange} // El onChange aquí no hace nada si es readOnly
             readOnly // Este campo es siempre de solo lectura
             required
           />
 
           <Button type="submit">
-            {editData ? "Guardar Cambios" : "Añadir Ingrediente"}
+            {editData ? (
+              <><CheckIcon className="h-5 w-5 inline mr-2" /> Guardar Cambios</>
+            ) : (
+              <><PlusIcon className="h-5 w-5 inline mr-2" /> Añadir Ingrediente</>
+            )}
           </Button>
         </form>
       </Modal>
@@ -393,8 +413,9 @@ function IngredientesPage() {
       <div className="p-4">
         <Button
           onClick={() => setActiveModal("addIngredientes")}
-          className="mb-4 bg-amber-600 text-amber-50"
+          className="mb-4 bg-indigo-600 hover:bg-indigo-700 text-white"
         >
+          <PlusIcon className="h-5 w-5 inline-block mr-2" />
           Añadir Ingrediente
         </Button>
 

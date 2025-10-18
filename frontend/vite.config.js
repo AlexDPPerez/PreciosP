@@ -11,8 +11,6 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3000', // Tu servidor de Express
         changeOrigin: true,
-        // Reescribe la petición para quitar /api del path
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     }
   }

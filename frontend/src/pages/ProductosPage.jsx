@@ -5,13 +5,19 @@ import Modal from "../components/Modal";
 import ProductosForm from "../components/ProductosForm";
 import Notificacion from "../components/Notificacion";
 import ConfirmacionModal from "../components/ConfirmacionModal";
+import {
+  PlusIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/solid";
 
 function ProductosPage() {
   const [productos, setProductos] = useState([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [activeModal, setActiveModal] = useState(null);
- 
+
   const [editProductData, setEditProductData] = useState(null);
   const [deleteItem, setDeleteItem] = useState(null);
   const [notificacion, setNotificacion] = useState(null);
@@ -42,13 +48,15 @@ function ProductosPage() {
       // 1. Fetch de los detalles completos del producto, incluyendo ingredientes
       const response = await fetch(`/api/productos/${producto.id}`);
       if (!response.ok) {
-        throw new Error("No se pudieron cargar los detalles del producto para editar.");
+        throw new Error(
+          "No se pudieron cargar los detalles del producto para editar."
+        );
       }
       const productDetails = await response.json();
-      
+
       // 2. Guardar los datos para la edición
       setEditProductData(productDetails);
-      
+
       // 3. Abrir el modal
       setActiveModal("addProducto");
     } catch (error) {
@@ -95,29 +103,74 @@ function ProductosPage() {
     { header: "ID", accessor: "id" },
     { header: "Nombre", accessor: "nombre" },
     {
+      header: "Cantidad Lote",
+      accessor: "cantidad_lote",
+      cell: (valor) => `${(valor || 0).toFixed(0)}`,
+    },
+    {
       header: "Costo Lote",
       accessor: "costo_lote",
       cell: (valor) => `$${(valor || 0).toFixed(2)}`,
     },
     {
-      header: "Costo Unidad",
+      header: "Costo Unidad (base)",
       accessor: "costo_unidad",
       cell: (valor) => `$${(valor || 0).toFixed(2)}`,
+    },
+    {
+      header: "Cantidad por Paquete",
+      accessor: "cantidad_paquete",
+      cell: (valor) => (valor || 0).toFixed(0),
+    },
+    {
+      header: "Total Paquetes",
+      accessor: "total_paquetes",
+      cell: (valor, fila) => {
+        const cantidadLote = fila.cantidad_lote || 0;
+        const cantidadPaquete = fila.cantidad_paquete || 1;
+        const cantidadPaquetes =
+          cantidadPaquete > 0 ? cantidadLote / cantidadPaquete : 0;
+        return cantidadPaquetes.toFixed(0);
+      }
+    },
+    {
+      header: "Costo Paquete (base)",
+      accessor: "costo_paquete",
+      cell: (valor, fila) => {
+        const costoUnidad = fila.costo_unidad || 0;
+        const cantidadPaquete = fila.cantidad_paquete || 0;
+        return `$${(costoUnidad * cantidadPaquete).toFixed(2)}`;
+      },
+    },
+    {
+      header: "Tiempo Producción (hrs)",
+      accessor: "tiempo_produccion",
+      cell: (valor) => (valor || 0).toFixed(0) + " hrs", 
     },
     {
       header: "Acciones",
       accessor: "acciones",
       cell: (valor, fila) => (
         <div className="flex space-x-2">
-          
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(fila);
+            }}
+            className="p-2 bg-yellow-500 hover:bg-yellow-600 text-white"
+            aria-label="Editar"
+          >
+            <PencilSquareIcon className="h-4 w-4" />
+          </Button>
           <Button
             onClick={(e) => {
               e.stopPropagation();
               handleDelete(fila);
             }}
-            className="font-black text-gray-800 bg-gray-200 hover:bg-red-600 hover:text-gray-100"
+            className="p-2 bg-red-600 hover:bg-red-700 text-white"
+            aria-label="Eliminar"
           >
-            X
+            <TrashIcon className="h-4 w-4" />
           </Button>
         </div>
       ),
@@ -145,21 +198,25 @@ function ProductosPage() {
         title={editProductData ? "Editar Producto" : "Añadir Producto"}
         isOpen={activeModal == "addProducto"}
         onClose={handleCloseModal}
-        className="max-w-4xl h-[80vh]" // <-- Añadimos una altura del 80% del viewport height
+        className="max-w-4xl"
       >
         {/* Pasamos la función para cerrar el modal al formulario */}
-        <ProductosForm 
-          onClose={handleCloseModal} 
-          onProductAdded={() => { fetchProductos(); handleCloseModal(); }}
+        <ProductosForm
+          onClose={handleCloseModal}
+          onProductAdded={() => {
+            fetchProductos();
+            handleCloseModal();
+          }}
           productToEdit={editProductData}
         />
       </Modal>
 
-      <div className="p-4">
+      <div className="p-4 sm:p-6 md:p-8">
         <Button
           onClick={() => setActiveModal("addProducto")}
-          className="mb-4 bg-amber-600 text-amber-50"
+          className="mb-4 bg-indigo-600 hover:bg-indigo-700 text-white"
         >
+          <PlusIcon className="h-5 w-5 inline-block mr-2" />
           Añadir producto
         </Button>
         <Tabla

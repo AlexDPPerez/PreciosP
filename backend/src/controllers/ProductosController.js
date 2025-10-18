@@ -33,14 +33,14 @@ export const addProducto = async (req, res) => {
     const productosModel = new Productos(db);
     try{
         // Recibimos el objeto completo desde el frontend
-        const { nombre, costo_lote, costo_unidad, ingredientes, cantidad_lote, cantidad_paquete } = req.body;
+        const { nombre, costo_lote, costo_unidad, ingredientes, cantidad_lote, cantidad_paquete, tiempo_produccion } = req.body;
 
         // Validamos que los ingredientes existan
         if (!ingredientes || !Array.isArray(ingredientes) || ingredientes.length === 0) {
             return res.status(400).json({ error: "Se requiere al menos un ingrediente." });
         }
 
-        const nuevoProducto = await productosModel.create(nombre, costo_lote, costo_unidad, ingredientes, cantidad_lote, cantidad_paquete);
+        const nuevoProducto = await productosModel.create(nombre, costo_lote, costo_unidad, ingredientes, cantidad_lote, cantidad_paquete, tiempo_produccion);
         res.status(201).json({ message: "Producto agregado con éxito", producto: nuevoProducto });
     } catch (error) {
      
@@ -54,13 +54,13 @@ export const updateProducto = async (req, res) => {
     const productosModel = new Productos(db);
     try {
         const { id } = req.params;
-        const { nombre, costo_lote, costo_unidad, ingredientes, cantidad_lote, cantidad_paquete } = req.body;
+        const { nombre, costo_lote, costo_unidad, ingredientes, cantidad_lote, cantidad_paquete, tiempo_produccion } = req.body;
 
         if (!ingredientes || !Array.isArray(ingredientes) || ingredientes.length === 0) {
             return res.status(400).json({ error: "Se requiere al menos un ingrediente." });
         }
 
-        const productoActualizado = await productosModel.update(id, nombre, costo_lote, costo_unidad, ingredientes, cantidad_lote, cantidad_paquete);
+        const productoActualizado = await productosModel.update(id, nombre, costo_lote, costo_unidad, ingredientes, cantidad_lote, cantidad_paquete, tiempo_produccion);
         res.status(200).json({ message: "Producto actualizado con éxito", producto: productoActualizado });
     } catch (error) {
         console.error("Error al actualizar producto:", error);

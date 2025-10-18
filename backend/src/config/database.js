@@ -31,7 +31,8 @@ export const initDB = async () => {
       cantidad_lote REAL,
       cantidad_paquete REAL,
       costo_lote REAL,
-      costo_unidad REAL
+      costo_unidad REAL,
+      tiempo_produccion REAL
     );
 
     CREATE TABLE IF NOT EXISTS ingredientes_productos (
@@ -41,6 +42,13 @@ export const initDB = async () => {
       cantidad REAL,
       FOREIGN KEY (id_producto) REFERENCES productos(id) ON DELETE CASCADE,
       FOREIGN KEY (id_ingrediente) REFERENCES ingredientes(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS gastos_fijos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      descripcion TEXT NOT NULL,
+      monto REAL NOT NULL,
+      categoria TEXT
     );
   `);
 
