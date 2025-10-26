@@ -16,8 +16,8 @@ export const addIngredientes = async (req, res) => {
     const db = req.app.get('db');
     const ingredientesModel = new Ingredientes(db);
     try {
-        const { nombre, id_medida, costo } = req.body;
-        const nuevoIngrediente = await ingredientesModel.create(nombre, id_medida, costo);
+        const { nombre, id_medida, costo, costo_compra, cantidad_compra } = req.body;
+        const nuevoIngrediente = await ingredientesModel.create(nombre, id_medida, costo, costo_compra, cantidad_compra);
         res.status(201).json({ message: "Ingrediente agregado con éxito", ingrediente: nuevoIngrediente });
     } catch (error) {
         console.error("Error al añadir ingrediente:", error);
@@ -30,8 +30,8 @@ export const updateIngredientes = async (req, res) => {
     const ingredientesModel = new Ingredientes(db);
     try {
         const { id } = req.params;
-        const { nombre, id_medida, costo } = req.body;
-        await ingredientesModel.update(id, nombre, id_medida, costo);
+        const { nombre, id_medida, costo, costo_compra, cantidad_compra } = req.body;
+        await ingredientesModel.update(id, nombre, id_medida, costo, costo_compra, cantidad_compra);
         res.status(200).json({ message: "Ingrediente actualizado con éxito" });
     } catch (error) {
         console.error("Error al actualizar ingrediente:", error);

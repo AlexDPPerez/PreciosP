@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Input from "./form/Input";
+import SearchableSelect from "./form/SearchableSelect";
 import Button from "./form/Button";
 import {
   PlusIcon,
@@ -24,6 +25,7 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
   const [ingredientesData, setIngredientesData] = useState([]);
   const [costoLote, setCostoLote] = useState(0);
   const [costoUnidad, setCostoUnidad] = useState(0);
+  const [currentStep, setCurrentStep] = useState(1);
   const [costoPaquete, setCostoPaquete] = useState(0);
   const [cantidadPaquetes, setCantidadPaquetes] = useState(0);
   // Estado para manejar errores o estado de carga del formulario
@@ -49,7 +51,12 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
       setIngredientes(productToEdit.ingredientes || []);
     } else {
       // Limpiar el formulario si no hay producto para editar (modo creación)
-      setProductoInfo({ nombre: "", cantidad_lote: "", cantidad_paquete: "", tiempo_produccion: "" });
+      setProductoInfo({
+        nombre: "",
+        cantidad_lote: "",
+        cantidad_paquete: "",
+        tiempo_produccion: "",
+      });
       setIngredientes([]);
     }
   }, [productToEdit]);
@@ -158,6 +165,21 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
     });
   };
 
+  const nextStep = () => {
+    // Validación para pasar al siguiente paso
+    if (!productoInfo.nombre.trim() || !productoInfo.cantidad_lote) {
+      setFormError("El nombre del producto y la cantidad por lote son obligatorios para continuar.");
+      return;
+    }
+    setFormError(null);
+    setCurrentStep(2);
+  };
+
+  const prevStep = () => {
+    setCurrentStep(1);
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError(null);
@@ -192,6 +214,8 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
       })),
     };
 
+    console.log(productoFinal);
+
     try {
       const response = await fetch(url, {
         method: method,
@@ -219,156 +243,143 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
 
   return (
     // 1. Usamos flexbox para la estructura principal y le damos una altura fija para que ocupe todo el modal.
-    <form className="flex flex-col" onSubmit={handleSubmit}>
-      {/* 2. Contenedor principal que se expandirá y contendrá las dos columnas */}
-      <div className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-6 p-1 min-h-0">
-        {/* Columna Izquierda: Datos del Producto */}
-        <div className="flex flex-col space-y-4 p-2">
-          <div className="w-full">
+    <form className="flex flex-col h-full" onSubmit={handleSubmit} noValidate>
+      {/* Indicador de Pasos */}
+      <div className="mb-4 text-center">
+        <p className="text-sm text-gray-500">Paso {currentStep} de 2</p>
+        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+          <div className={`bg-indigo-600 h-1.5 rounded-full transition-all duration-300 ${currentStep === 1 ? 'w-1/2' : 'w-full'}`}></div>
+        </div>
+      </div>
+
+      {/* Contenedor principal que se expandirá */}
+      <div className="flex-grow p-1 min-h-0 overflow-y-auto">
+        {/* PASO 1: Datos del Producto */}
+        {currentStep === 1 && (
+          <div className="space-y-4">
             <Input
-              label={"Nombre del Producto"}
-              name={"nombre"}
+              label="Nombre del Producto"
+              name="nombre"
               value={productoInfo.nombre}
-              onChange={(e) => handleChangeProducto(e)}
+              onChange={handleChangeProducto}
               required
             />
-          </div>
-
-          <div className="w-full">
             <Input
-              label={"Cantidad por Lote"}
-              name={"cantidad_lote"}
+              label="Cantidad por Lote"
+              name="cantidad_lote"
               type="number"
               value={productoInfo.cantidad_lote}
-              onChange={(e) => handleChangeProducto(e)}
+              onChange={handleChangeProducto}
               required
             />
-          </div>
-
-          <div className="w-full">
             <Input
-              label={"Cantidad por Paquete"}
-              name={"cantidad_paquete"}
+              label="Cantidad por Paquete"
+              name="cantidad_paquete"
               type="number"
               value={productoInfo.cantidad_paquete}
-              onChange={(e) => handleChangeProducto(e)}
-              required
+              onChange={handleChangeProducto}
             />
-          </div>
-
-          <div className="w-full">
             <Input
-              label={"Tiempo de Producción por Lote (horas)"}
-              name={"tiempo_produccion"}
+              label="Tiempo de Producción por Lote (horas)"
+              name="tiempo_produccion"
               type="number"
               value={productoInfo.tiempo_produccion}
-              onChange={(e) => handleChangeProducto(e)}
+              onChange={handleChangeProducto}
             />
           </div>
+        )}
 
-          {/* Aquí puedes agregar más campos si hace falta */}
-          <div className="mt-auto bg-gray-100 p-4 rounded-lg space-y-3">
-            <div>
-              <h3 className="text-md font-semibold text-gray-600">Costo Total del Lote:</h3>
-              <p className="text-xl font-mono text-gray-800">
-                ${(costoLote || 0).toFixed(2)}
-              </p>
-            </div>
-            <div className="border-t pt-3">
-              <h3 className="text-lg font-bold text-gray-800">Costo por Unidad:</h3>
-              <p className="text-3xl font-mono font-bold text-indigo-600">
-                ${(costoUnidad || 0).toFixed(3)}
-              </p>
-            </div>
-            <div className="border-t pt-3">
-              <h3 className="text-lg font-bold text-gray-800">Costo por Paquete:</h3>
-              <span className="text-gray-700">
-                ({cantidadPaquetes.toFixed(0)} Paquetes)
-              </span>
-              <p className="text-3xl font-mono font-bold text-indigo-600">
-                ${(costoPaquete || 0).toFixed(3)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Columna Derecha: Gestión de Ingredientes */}
-        <div className="p-4 border border-gray-200 rounded-lg bg-gray-50 flex flex-col min-h-0">
-          <label
-            htmlFor="nombre_ingrediente"
-            className="text-sm font-semibold text-gray-700"
-          >
-            Ingredientes
-          </label>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 items-center">
-            <select
-              name="nombre_ingrediente"
-              id="nombre_ingrediente"
-              value={ingrediente.id}
-              onChange={(e) => handleAddIngrediente(e.target.value)}
-              className="sm:col-span-2 block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-            >
-              <option value="">Selecciona un ingrediente</option>
-              {ingredientesData
-                .filter(
-                  (ingData) =>
-                    !ingredientes.some((ing) => ing.id === ingData.id)
-                )
-                .map((ing) => (
-                  <option key={ing.id} value={ing.id}>
-                    {ing.nombre}
-                  </option>
-                ))}
-            </select>
-
-            <Button
-              type="button"
-              onClick={addIngrediente}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white sm:col-span-1 w-full sm:w-auto p-2.5 flex justify-center items-center"
-              aria-label="Añadir ingrediente"
-            >
-              <PlusIcon className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Lista de ingredientes añadidos: se expandirá y tendrá scroll */}
-          <div className="mt-4 flex-grow min-h-0 overflow-y-auto pr-2 space-y-2">
-            {ingredientes.map((ing, i) => (
-              <div
-                key={ing.id + i}
-                className="grid grid-cols-2 sm:grid-cols-3 gap-3 items-center p-3 border border-gray-200 rounded-lg bg-white"
-              >
-                <div className="col-span-2 sm:col-span-3 text-gray-800 truncate font-medium">
-                  {ing.nombre}
+        {/* PASO 2: Gestión de Ingredientes y Costos */}
+        {currentStep === 2 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+            {/* Columna Izquierda: Gestión de Ingredientes */}
+            <div className="p-4 border border-gray-200 rounded-lg bg-gray-50 flex flex-col min-h-0">
+              <label htmlFor="nombre_ingrediente" className="text-sm font-semibold text-gray-700">
+                Ingredientes
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 items-center">
+                <div className="sm:col-span-2">
+                <SearchableSelect
+                  value={ingrediente.id}
+                  onChange={handleAddIngrediente}
+                  placeholder="Busca un ingrediente..."
+                  options={ingredientesData
+                    .filter(
+                      (ingData) => !ingredientes.some((ing) => ing.id === ingData.id)
+                    )
+                    .map((ing) => ({
+                      value: ing.id,
+                      label: ing.nombre,
+                    }))}
+                />
                 </div>
-
-                <div className="col-span-1 sm:col-span-2 flex items-center space-x-2">
-                  <input
-                    type="number"
-                    step="any"
-                    onChange={(e) => handleChangeIngrediente(i, e.target.value)}
-                    value={ing.cantidad || ""}
-                    className="w-full max-w-[120px] border border-gray-300 rounded px-2 py-1 text-center text-sm focus:outline-none focus:ring-1 focus:ring-indigo-200"
-                    placeholder="Cant."
-                  />
-                  <span className="text-sm text-gray-500">
-                    {ing.nombre_medida}
-                  </span>
-                </div>
-
-                <button
+                <Button
                   type="button"
-                  onClick={() => handleDeleteIngrediente(i)}
-                  className="col-span-1 flex justify-end text-red-500 hover:text-red-700"
-                  aria-label={`Eliminar ${ing.nombre}`}
+                  onClick={addIngrediente}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white sm:col-span-1 w-full sm:w-auto p-2.5 flex justify-center items-center"
+                  aria-label="Añadir ingrediente"
                 >
-                  <TrashIcon className="h-5 w-5" />
-                </button>
+                  <PlusIcon className="h-5 w-5" />
+                </Button>
               </div>
-            ))}
+              <div className="mt-4 flex-grow min-h-0 overflow-y-auto pr-2 space-y-2">
+                {ingredientes.map((ing, i) => (
+                  <div key={ing.id + i} className="relative grid sm:grid-cols-3 gap-x-4 gap-y-2 items-center p-3 border border-gray-200 rounded-lg bg-white">
+                    <div className="col-span-full text-gray-800 truncate font-medium">
+                      {ing.nombre}
+                    </div>
+                    <div className="col-span-full sm:col-span-2 flex items-center space-x-2">
+                      <input
+                        type="number"
+                        step="any"
+                        onChange={(e) => handleChangeIngrediente(i, e.target.value)}
+                        value={ing.cantidad || ""}
+                        className="w-full max-w-[120px] border border-gray-300 rounded px-2 py-1 text-center text-sm focus:outline-none focus:ring-1 focus:ring-indigo-200"
+                        placeholder="Cant."
+                      />
+                      <span className="text-sm text-gray-500">{ing.nombre_medida}</span>
+                    </div>
+                    <div className="col-span-full text-xs text-gray-500 flex flex-wrap gap-x-2 items-center">
+                      <span className="font-semibold">Costo Compra:</span>
+                      <span>${(ing.costo_compra || 0).toFixed(2)} x {ing.cantidad_compra} {ing.simbolo_medida} |</span>
+                      <span className="font-semibold">Costo Base:</span>
+                      <span>${(ing.costo || 0).toFixed(4)} / {ing.simbolo_base} |</span>
+                      <span className="font-semibold">Subtotal:</span>
+                      <span className="font-bold text-gray-600">${((ing.costo || 0) * (ing.cantidad || 0) * (ing.base_conversion || 1)).toFixed(2)}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteIngrediente(i)}
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                      aria-label={`Eliminar ${ing.nombre}`}
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Columna Derecha: Resumen de Costos */}
+            <div className="bg-gray-100 p-4 rounded-lg space-y-3 flex flex-col">
+              <h2 className="text-base lg:text-lg font-bold text-gray-800 border-b pb-2">Resumen de Costos</h2>
+              <div className="flex-grow space-y-2 lg:space-y-4">
+                <div>
+                  <h3 className="text-sm lg:text-base font-semibold text-gray-600">Costo Total del Lote:</h3>
+                  <p className="text-lg lg:text-xl font-mono text-gray-800">${(costoLote || 0).toFixed(2)}</p>
+                </div>
+                <div className="border-t pt-2 lg:pt-3">
+                  <h3 className="text-base lg:text-lg font-bold text-gray-800">Costo por Unidad:</h3>
+                  <p className="text-2xl lg:text-3xl font-mono font-bold text-indigo-600">${(costoUnidad || 0).toFixed(3)}</p>
+                </div>
+                <div className="border-t pt-2 lg:pt-3">
+                  <h3 className="text-base lg:text-lg font-bold text-gray-800">Costo por Paquete:</h3>
+                  <span className="text-gray-700">({cantidadPaquetes.toFixed(0)} Paquetes)</span>
+                  <p className="text-2xl lg:text-3xl font-mono font-bold text-indigo-600">${(costoPaquete || 0).toFixed(3)}</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Muestra de errores del formulario */}
@@ -377,28 +388,42 @@ function ProductosForm({ onClose, onProductAdded, productToEdit }) {
       )}
 
       {/* 3. Contenedor de botones: 'mt-auto' lo empuja al final del contenedor flex principal */}
-      <div className="mt-auto pt-4 flex justify-end space-x-3">
-        <Button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800"
-        >
-          <XMarkIcon className="h-5 w-5 inline mr-1" />
-          Cancelar
+      <div className="mt-auto pt-4 flex justify-between items-center">
+        {/* Botón de Cancelar siempre visible a la izquierda */}
+        <Button type="button" onClick={onClose} className="bg-gray-200 hover:bg-gray-300 text-gray-800">
+          <XMarkIcon className="h-5 w-5 inline mr-1" /> Cancelar
         </Button>
-        <Button
-          type="submit"
-          className="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            "Guardando..."
-          ) : isEditing ? (
-            <><CheckIcon className="h-5 w-5 inline mr-2" /> Guardar Cambios</>
-          ) : (
-            <><PlusIcon className="h-5 w-5 inline mr-2" /> Añadir Producto</>
+
+        {/* Botones de navegación y guardado a la derecha */}
+        <div className="flex space-x-3">
+          {currentStep === 2 && (
+            <Button type="button" onClick={prevStep} className="bg-gray-500 hover:bg-gray-600 text-white">
+              Atrás
+            </Button>
           )}
-        </Button>
+
+          {currentStep === 1 && (
+            <Button type="button" onClick={nextStep} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              Siguiente
+            </Button>
+          )}
+
+          {currentStep === 2 && (
+            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isSubmitting}>
+              {isSubmitting ? (
+                "Guardando..."
+              ) : isEditing ? (
+                <>
+                  <CheckIcon className="h-5 w-5 inline mr-2" /> Guardar Cambios
+                </>
+              ) : (
+                <>
+                  <PlusIcon className="h-5 w-5 inline mr-2" /> Añadir Producto
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </form>
   );

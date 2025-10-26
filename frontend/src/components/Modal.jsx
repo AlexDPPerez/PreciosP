@@ -45,7 +45,7 @@ function Modal({ isOpen, onClose, title, children, className = "" }) {
   return createPortal(
     <>
       <div
-        onClick={onClose} // Ahora llamamos a onClose directamente, el useEffect se encargará de la animación
+       
         className={`fixed inset-0 bg-black/50 z-40 flex justify-center items-center transition-opacity duration-300 ${
           isRendered ? "opacity-100" : "opacity-0"
         }`}
@@ -53,7 +53,7 @@ function Modal({ isOpen, onClose, title, children, className = "" }) {
         {/* Contenedor del Modal: Usamos 'relative' y evitamos que el click se propague al overlay */}
         <div
           onClick={(e) => e.stopPropagation()} 
-          className={`relative bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-4xl p-4 sm:p-6 transition-all duration-300 flex flex-col ${className} ${
+          className={`relative bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-4xl p-4 sm:p-6 transition-all duration-300 flex flex-col ${className.includes('h-screen-90') ? 'h-[90vh]' : ''} ${className} ${
             isRendered ? "opacity-100 scale-100" : "opacity-0 scale-95"
           }`}
           role="dialog"

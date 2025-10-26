@@ -33,6 +33,8 @@ function IngredientesPage() {
     nombre: "",
     id_medida: "1", // Valor por defecto
     costo: "", // Este será el costo final por unidad base (ej: por gramo)
+    costo_compra: "",
+    cantidad_compra: "",
   });
 
   // Estado para el helper de cálculo
@@ -129,6 +131,8 @@ function IngredientesPage() {
           id_medida: parseInt(form.id_medida),
           // Siempre enviamos el costo calculado por unidad base
           costo: parseFloat(form.costo) || 0,
+          costo_compra: parseFloat(calculadora.costo_paquete) || 0,
+          cantidad_compra: parseFloat(calculadora.cantidad_paquete) || 0,
         }),
       });
       if (isEditing) {
@@ -153,7 +157,7 @@ function IngredientesPage() {
         // Limpiamos el estado de edición después de un pequeño delay para la animación del modal
         setTimeout(() => setEditData(null), 300);
       }
-      setForm({ nombre: "", id_medida: "1", costo: "" }); // Limpiamos form
+      setForm({ nombre: "", id_medida: "1", costo: "", costo_compra: "", cantidad_compra: "" }); // Limpiamos form
       setCalculadora({ costo_paquete: "", cantidad_paquete: "" }); // Limpiamos la calculadora
       fetchIngredientes();
     } catch (error) {
@@ -173,18 +177,14 @@ function IngredientesPage() {
     setForm({
       nombre: e.nombre,
       id_medida: e.id_medida,
-      costo: e.costo,
+      costo: e.costo, // Costo base
+      costo_compra: e.costo_compra,
+      cantidad_compra: e.cantidad_compra,
     });
 
-    // 3. Pre-poblamos la calculadora para que el usuario pueda ajustar el precio de compra.
-    //    Buscamos la medida correspondiente de forma segura para obtener el 'base_conversion'.
-    const medidaDelIngrediente = medidas.find(m => m.id == e.id_medida);
-    const factorConversion = medidaDelIngrediente ? medidaDelIngrediente.base_conversion : 1;
-    const costoDeCompra = (e.costo || 0) * factorConversion;
-
     setCalculadora({
-      costo_paquete: costoDeCompra.toFixed(6), // Usamos más decimales para precisión
-      cantidad_paquete: "1", // Asumimos una cantidad de 1 para la unidad de compra (1 Kg, 1 L)
+      costo_paquete: e.costo_compra || "",
+      cantidad_paquete: e.cantidad_compra || "",
     });
 
     setActiveModal("addIngredientes");
@@ -265,12 +265,13 @@ function IngredientesPage() {
       header: "Costo de Compra",
       accessor: "costo",
       // La función 'cell' recibe el valor y la fila completa
-      cell: (valor, fila) => {
-        // Calculamos el costo en la unidad de medida del ingrediente (ej. por Kg)
-        const costoDisplay = (valor || 0) * (fila.base_conversion || 1);
-        // Si el costo es muy bajo (menor a $0.01), usamos 4 decimales. Si no, 2.
-        const costoFormateado = costoDisplay < 0.01 ? costoDisplay.toFixed(4) : costoDisplay.toFixed(2);
-        return `$${costoFormateado} / ${fila.simbolo_medida}`;
+      cell: (_, fila) => {
+        const costoCompra = parseFloat(fila.costo_compra) || 0;
+        const cantidadCompra = parseFloat(fila.cantidad_compra) || 0;
+        if (costoCompra > 0 && cantidadCompra > 0) {
+          return `$${costoCompra.toFixed(2)} / ${cantidadCompra} ${fila.simbolo_medida}`;
+        }
+        return "N/A";
       },
     },
     {
@@ -333,9 +334,12 @@ function IngredientesPage() {
 
       <Modal
         isOpen={activeModal == "addIngredientes"}
-        onClose={() => (
+        onClose={() => {
+          setActiveModal(null);
+          setForm({ nombre: "", id_medida: "1", costo: "", costo_compra: "", cantidad_compra: "" });
+          setCalculadora({ costo_paquete: "", cantidad_paquete: "" });
           setActiveModal(null), setTimeout(() => setEditData(null), 300)
-        )}
+        }}
         title={editData ? "Editar Ingrediente" : "Añadir Ingrediente"} 
       >
         <form
@@ -376,12 +380,14 @@ function IngredientesPage() {
                   type="number"
                   name="costo_paquete"
                   step="any"
+                  value={calculadora.costo_paquete || ""}
                   onChange={handleChange}
                   placeholder="$"
                 />
                 <Input
                   label={`Cantidad (${medidas.find(m => m.id == form.id_medida)?.nombre || ''})`}
                   type="number"
+                  value={calculadora.cantidad_paquete || ""}
                   name="cantidad_paquete"
                   step="any"
                   onChange={handleChange}
@@ -424,8 +430,6 @@ function IngredientesPage() {
           columnas={columnasIngredientes}
           data={ingredientes} // Pasamos solo los items de la página actual
           isLoading={isLoading}
-          handleEdit={handleEdit}
-          handleDelete={handleDelete}
           error={error}
           rows={15}
         />

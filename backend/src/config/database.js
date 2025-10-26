@@ -22,6 +22,8 @@ export const initDB = async () => {
       nombre TEXT,
       id_medida INTEGER,
       costo REAL,
+      costo_compra REAL,
+      cantidad_compra REAL,
       FOREIGN KEY (id_medida) REFERENCES medidas(id)
     );
 

@@ -11,6 +11,7 @@ import {
   TrashIcon,
   ArrowPathIcon,
 } from "@heroicons/react/24/solid";
+import DetallesProducto from "../components/detallesProducto";
 
 function ProductosPage() {
   const [productos, setProductos] = useState([]);
@@ -20,6 +21,7 @@ function ProductosPage() {
 
   const [editProductData, setEditProductData] = useState(null);
   const [deleteItem, setDeleteItem] = useState(null);
+  const [productoParaDetalles, setProductoParaDetalles] = useState(null); // Nuevo estado para el modal de detalles
   const [notificacion, setNotificacion] = useState(null);
 
   useEffect(() => {
@@ -66,9 +68,16 @@ function ProductosPage() {
 
   const handleCloseModal = () => {
     setActiveModal(null);
-    // Limpiamos los datos de edición al cerrar para que la próxima vez sea un formulario de creación
-    // El timeout espera a que la animación del modal termine.
     setTimeout(() => setEditProductData(null), 300);
+  };
+
+  // Funciones para el modal de detalles
+  const handleVerDetalles = (producto) => {
+    setProductoParaDetalles(producto);
+  };
+
+  const handleCerrarDetalles = () => {
+    setProductoParaDetalles(null);
   };
 
   const handleDelete = (producto) => {
@@ -198,7 +207,7 @@ function ProductosPage() {
         title={editProductData ? "Editar Producto" : "Añadir Producto"}
         isOpen={activeModal == "addProducto"}
         onClose={handleCloseModal}
-        className="max-w-4xl"
+        className="max-w-4xl h-screen-90"
       >
         {/* Pasamos la función para cerrar el modal al formulario */}
         <ProductosForm
@@ -209,6 +218,14 @@ function ProductosPage() {
           }}
           productToEdit={editProductData}
         />
+      </Modal>
+
+      <Modal
+        title={`Detalles de: ${productoParaDetalles?.nombre}`}
+        isOpen={!!productoParaDetalles}
+        onClose={handleCerrarDetalles}
+      >
+        <DetallesProducto product={productoParaDetalles} onClose={handleCerrarDetalles} />
       </Modal>
 
       <div className="p-4 sm:p-6 md:p-8">
@@ -224,8 +241,7 @@ function ProductosPage() {
           data={productos}
           error={error}
           isLoading={isLoading}
-          handleEdit={handleEdit}
-          handleDelete={handleDelete}
+          onRowClick={handleVerDetalles} // Pasamos la nueva función a la tabla
           rows={15}
         />
       </div>

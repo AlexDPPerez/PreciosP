@@ -20,6 +20,8 @@ export class Productos {
         ip.cantidad, 
         i.costo,
         m.nombre as nombre_medida,
+        i.costo_compra,
+        i.cantidad_compra,
         m.simbolo as simbolo_medida,
         m.base_conversion
       FROM ingredientes_productos ip
